@@ -1,10 +1,25 @@
 import * as express from 'express'
 
+declare global {
+  namespace Express {
+    // Add the kauth property to the incoming express.Request object
+    interface Request {
+      /**
+       * Supports accessing token and session information, e.g:
+       * req.kauth.grant.access_token?.content.name returns the user's name
+       */
+      kauth: {
+        grant: KeycloakConnect.Grant
+      }
+    }
+  }
+}
+
 /**
  * The JavaScript module is exported as a single function, but for TypeScript we
  * need to export the function and a set of interfaces so developers can assign
  * types such as Grant, Token, etc. to variables in their own code.
- * 
+ *
  * To achieve this we export "KeycloakConnect" that references a namespace
  * containing our typings, and a static instance exposing the constructor
  */
@@ -40,7 +55,68 @@ declare namespace KeycloakConnect {
     token_type?: string
   }
 
+  type UserInfo = {
+    sub: string
+    email_verified: boolean
+    name: string
+    preferred_username: string
+    given_name: string
+    family_name: string
+    email: string
+  }
+
   interface Token {
+    token: string,
+    clientId: string,
+    header: {
+      alg: string, // e.g RS256
+      typ: string, // e.g "JWT"
+      kid: string
+    },
+    content: {
+      /**
+       * Expiry represented as seconds from epoch
+       */
+      exp: number,
+      /**
+       * Last update time represented as seconds from epoch
+       */
+      iat: number,
+      /**
+       * Time when the initial authentication occurred
+       */
+      auth_time: number,
+      jti: string,
+
+      /**
+       * Issuer, e.g "http://keycloak.acme.org/auth/realms/app-realm"
+       */
+      iss: string,
+      aud: 'account',
+      /**
+       * The user's account ID in Keycloak.
+       */
+      sub: string,
+      typ: string, // e.g Bearer
+      azp: string,
+      session_state: string,
+      acr: string,
+      'allowed-origins': Array<string>,
+      realm_access: {
+        roles: Array<string>
+      },
+      resource_access: { account: { roles: string[] } },
+      scope: string,
+      email_verified: boolean,
+      name: string,
+      preferred_username: string,
+      given_name: string,
+      family_name: string,
+      email: string
+    },
+    signature: Buffer,
+    signed: string
+
     isExpired(): boolean
     hasRole(roleName: string): boolean
     hasApplicationRole(appName: string, roleName: string): boolean
@@ -118,7 +194,7 @@ declare namespace KeycloakConnect {
      * Returns a user info JSON Object
      * @param {Token|String} token
      */
-    userInfo<T extends Token|string, C>(token: T): Promise<C>
+    userInfo<T extends Token|string>(token: T): Promise<UserInfo>
 
     /**
      * Create a `Grant` object from a string of JSON data.
@@ -154,9 +230,9 @@ declare namespace KeycloakConnect {
      * This method accepts a token, and returns a promise
      *
      * If the token is valid the promise will be resolved with the token
-     * 
+     *
      * If the token is undefined or fails validation an applicable error is returned
-     * 
+     *
      * @return {Promise} That resolve a token
      */
     validateToken(token: Token, expectedType?: string): Promise<Token>
@@ -423,19 +499,19 @@ declare namespace KeycloakConnect {
     /**
      * Replaceable function to handle redirect behaviour.
      *
-     * By default, all unauthorized requests will be redirected to the 
-     * Keycloak login page unless your client is bearer-only. 
-     * However, a confidential or public client may host both browsable and API endpoints. 
-     * To prevent redirects on unauthenticated API requests and instead return an HTTP 401, 
+     * By default, all unauthorized requests will be redirected to the
+     * Keycloak login page unless your client is bearer-only.
+     * However, a confidential or public client may host both browsable and API endpoints.
+     * To prevent redirects on unauthenticated API requests and instead return an HTTP 401,
      * you can override the redirectToLogin function.
-     * 
+     *
      * For example, this override checks if the url contains /api/ and disables login redirects:
-     * 
+     *
      * Keycloak.prototype.redirectToLogin = function(req) {
      *   var apiReqMatcher = /\/api\//i;
      *   return !apiReqMatcher.test(req.originalUrl || req.url);
      * };
-     * 
+     *
      * @param {Object} request The HTTP request.
      */
     redirectToLogin(req: express.Request): boolean
