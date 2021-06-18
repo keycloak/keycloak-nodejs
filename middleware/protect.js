@@ -19,8 +19,13 @@ const UUID = require('./../uuid');
 
 function forceLogin (keycloak, request, response) {
   let host = request.hostname;
-  let headerHost = request.headers.host.split(':');
-  let port = headerHost[1] || '';
+  let port;
+  if ('x-forwarded-port' in request.headers) {
+    port = request.headers['x-forwarded-port'];
+  } else {
+    let headerHost = request.headers.host.split(':');
+    port = headerHost[1] || '';
+  }
   let protocol = request.protocol;
   let hasQuery = ~(request.originalUrl || request.url).indexOf('?');
 
