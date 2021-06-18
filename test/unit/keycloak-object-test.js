@@ -80,3 +80,16 @@ test('Should produce correct account url.', t => {
   t.equal(kc.accountUrl(), 'http://localhost:8080/auth/realms/test-realm/account');
   t.end();
 });
+
+test('Should update the config.', t => {
+  const mockConfig = {
+    'realm': 'test-realm',
+    'auth-server-url': 'http://localhost:8080/auth',
+    'ssl-required': 'external',
+    'resource': 'nodejs-connect',
+    'public-client': true
+  };
+  kc.setConfig(mockConfig);
+  t.equal(kc.getConfig(), mockConfig);
+  t.end();
+});

@@ -422,4 +422,9 @@ Keycloak.prototype.getConfig = function () {
   return this.config;
 };
 
+Keycloak.prototype.setConfig = function (config) {
+  this.config = config;
+  return this;
+};
+
 module.exports = Keycloak;

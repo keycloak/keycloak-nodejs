@@ -441,6 +441,8 @@ declare namespace KeycloakConnect {
     redirectToLogin(req: express.Request): boolean
 
     getConfig(): KeycloakConfig
+
+    setConfig(config: KeycloakConfig): Keycloak
   }
 
 }
