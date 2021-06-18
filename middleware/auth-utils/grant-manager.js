@@ -41,6 +41,7 @@ function GrantManager (config) {
   this.notBefore = 0;
   this.rotation = new Rotation(config);
   this.verifyTokenAudience = config.verifyTokenAudience;
+  this.useCustomHeaders = config.useCustomHeaders;
 }
 
 /**
@@ -290,9 +291,12 @@ GrantManager.prototype.userInfo = function userInfo (token, callback) {
 
   options.headers = {
     'Authorization': 'Bearer ' + t,
-    'Accept': 'application/json',
-    'X-Client': 'keycloak-nodejs-connect'
+    'Accept': 'application/json'
   };
+
+  if (this.useCustomHeaders) {
+    options['X-Client'] = 'keycloak-nodejs-connect';
+  }
 
   const promise = new Promise((resolve, reject) => {
     const req = getProtocol(options).request(options, (response) => {
@@ -503,9 +507,11 @@ const postOptions = (manager, path) => {
   const realPath = path || '/protocol/openid-connect/token';
   const opts = URL.parse(manager.realmUrl + realPath);
   opts.headers = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'X-Client': 'keycloak-nodejs-connect'
+    'Content-Type': 'application/x-www-form-urlencoded'
   };
+  if (manager.useCustomHeaders) {
+    opts['X-Client'] = 'keycloak-nodejs-connect';
+  }
   if (!manager.public) {
     opts.headers.Authorization = 'Basic ' + Buffer.from(manager.clientId + ':' + manager.secret).toString('base64');
   }

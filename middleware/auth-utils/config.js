@@ -119,6 +119,12 @@ Config.prototype.configure = function configure (config) {
   this.public = resolveValue(config['public-client'] || config.public || false);
 
   /**
+   * Enable/Disable the use of X-Custom headers
+   * @type {String}
+   */
+  this.useCustomHeaders = resolveValue(config.useCustomHeaders || true);
+
+  /**
    * Authentication server URL
    * @type {String}
    */
