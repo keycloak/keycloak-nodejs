@@ -45,6 +45,7 @@ declare namespace KeycloakConnect {
     hasRole(roleName: string): boolean
     hasApplicationRole(appName: string, roleName: string): boolean
     hasRealmRole(roleName: string): boolean
+    token: string
   }
 
   interface GrantManager {
