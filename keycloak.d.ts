@@ -32,15 +32,30 @@ declare namespace KeycloakConnect {
     cookies?: boolean
   }
 
+  interface Claims {
+    // In the future it may make sense to populate this with some known claims
+    [key: string]: any
+  }
+
+  interface TokenContent {
+    exp: number
+    resource_access?: {[k: string]: string[]}
+    realm_access?: { roles?: string[] }
+    authorization: { permissions?: {rsid: string, rsname: string, scopes?: string[]}[] }
+  }
+
   interface GrantProperties {
     access_token?: Token
     refresh_token?: Token
     id_token?: Token
-    expires_in?: string
+    expires_in?: number
     token_type?: string
   }
 
   interface Token {
+    clientId?: string
+    token?: string
+    content?: TokenContent
     isExpired(): boolean
     hasRole(roleName: string): boolean
     hasApplicationRole(appName: string, roleName: string): boolean
@@ -195,17 +210,24 @@ declare namespace KeycloakConnect {
   type GaurdFn = (accessToken: Token, req: express.Request, res: express.Response) => boolean
 
   interface EnforcerOptions {
-    response_mode?: string,
+    response_mode?: 'permissions' | 'token',
     resource_server_id?: string,
     claims?: (...args: any[]) => any
   }
 
   interface AuthZRequest {
-    audience?: string,
-    response_mode?: string,
-    claim_token?: string,
-    claim_token_format?: string,
+    audience?: string
+    claim_token?: string
+    claim_token_format?: string
     permissions: {id: string, scopes: string[]}[]
+  }
+  
+  interface AuthZRequestGrant extends AuthZRequest {
+    response_mode: undefined
+  }
+
+  interface AuthZRequestOther extends AuthZRequest {
+    response_mode: 'decision' | 'permissions'
   }
 
 
@@ -409,7 +431,8 @@ declare namespace KeycloakConnect {
 
     getGrantFromCode(code: string, req: express.Request, res: express.Response): Promise<Grant>
 
-    checkPermissions(authzRequest: AuthZRequest, request: express.Request, callback?: (json: any) => any): Promise<Grant>
+    checkPermissions(authzRequest: AuthZRequestGrant, request: express.Request, callback?: (grant: Grant) => void): Promise<Grant>
+    checkPermissions(authzRequest: AuthZRequestOther, request: express.Request, callback?: (json: any) => void): Promise<Object>
 
     loginUrl(uuid: string, redirectUrl: string): string
 
