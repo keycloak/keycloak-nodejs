@@ -167,6 +167,12 @@ Config.prototype.configure = function configure (config) {
    * @type {Boolean}
    */
   this.verifyTokenAudience = resolveValue(config['verify-token-audience'] || config.verifyTokenAudience || false);
+  /**
+   * Algorithm used for the key
+   * Default: RSA-SHA256
+   * @type {String}
+   */
+  this.publicKeyAlgorithm = resolveValue(config['realm-public-key-algorithm'] || config.realmPublicKeyAlgorithm || 'RSA-SHA256');
 };
 
 module.exports = Config;
